@@ -1,0 +1,2354 @@
+--[[
+Okay, this is the THIRD time i redo all of the script
+i hope it works bro..
+i dont wanna pass all day on studio anymore
+Stummy guns LUA -- By frenesion(AKA projectligma)
+]]
+
+--//services\\--
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local StarterGui = game:GetService("StarterGui")
+
+local player = game.Players.LocalPlayer
+local mouse = player:GetMouse()
+local camera = workspace.CurrentCamera
+local character = player.Character
+
+local Tool = script.Parent
+
+local wepin = nil
+local Items = nil
+pcall(function()
+	Items = game:GetObjects("rbxassetid://130147144094840")[1]
+end)
+local f = Instance.new("Folder")
+f.Parent = game.ReplicatedStorage
+f.Name = "StummyModels"
+Items.Parent = f
+
+local Left_Weld = nil
+local Right_Weld = nil
+local Fake_Arm_Right = nil
+local Fake_Arm_Left = nil
+local Fake_Arm_Model = nil
+local Arms_Made = false
+local IsEquipped = false
+
+local Settings = {
+	AimPart = nil,
+	Aiming = false,
+	FireRate = 0.1,
+	Ammo = 30,
+	MaxAmmo = 30,
+	FakeArms = true,
+	FakeArmTransparency = 0.5,
+	RightPos = CFrame.new(-0.75, -0.25, 0.5) * CFrame.Angles(math.rad(-90), 0, 0),
+	LeftPos = CFrame.new(1, 0.5, 0.5) * CFrame.Angles(math.rad(-90), math.rad(45), 0),
+	Recoil = 1.5,
+	Range = 500,
+	Damage = {10, 20},
+	HeadShotDamage = {40, 60},
+	ImpactDuration = 0.2,
+	AntiTK = false,
+	DropHats = false,
+}
+local Ignore_Model = Instance.new("Model", workspace)
+Ignore_Model.Name = "Ignore"
+
+local function getIgnore()
+	return {player.Character, Ignore_Model}
+end
+
+--//item type checke4r\\-- (now u cant use candy as gun, and im so fucking lazy to make knifes and foods codeeeeeeeeee :sob:)
+
+local guns = {
+	"Colt SMGS",
+	"HK21",
+	"M240 Bravo",
+	"SR-3M",
+	"S&W 500",
+	"Serbu Super Shorty",
+	"SA58 SPR",
+	"AA-12",
+	"HK416",
+	"HK416B",
+	"M416S",
+	"Silenced Glock 22",
+	"Glock 22",
+	"UMP45",
+	"Thompson",
+	"Thanoskraftwerk MKII",
+	"Thanoskraftwerk",
+	"TEC-9",
+	"Silenced Desert Eagle",
+	"Saiga-12",
+	"SKS",
+	"SCAR-L",
+	"SCAR-HAMR",
+	"SCAR SSR",
+	"Remington 870",
+	"RPK74",
+	"RPG-7",
+	"PPSH-41",
+	"Mossberg 500",
+	"MP5SD",
+	"MP5",
+	"MP412 ROX",
+	"MP412 REX",
+	"MP412 HD",
+	"MK11",
+	"MG42",
+	"MAC-10",
+	"M9S",
+	"M9",
+	"M60",
+	"M4A1",
+	"M249 SAW",
+	"C7A2",
+	"M200 Intervention",
+	"M1911S",
+	"M16A2 MOD1",
+	"M16A1",
+	"L85A2",
+	"Kriss Vector",
+	"Jon's MK12",
+	"Honey Badger",
+	"Glock 18S",
+	"Glock 18",
+	"Glock 17S",
+	"Glock 17",
+	"GM1M2 Flamethrower",
+	"G36",
+	"FN Hi-Power",
+	"FAMAS",
+	"Desert Eagle",
+	"AG3",
+	"AK74",
+	"AKM",
+	"AKS",
+	"AUG HBAR",
+	"AWM",
+	"AWS",
+	"M4A1-SS",
+	"Glock 22F",
+	"Silenced Glock 22F",
+	"M4A1-S",
+	"NCFOM Shotgun",
+	"Double Barrel Shotgun",
+	"Sawed-Off",
+	"M1911",
+	"TT-33 Tokarev",
+	"KPS",
+	"Silenced TT-33 Tokarev",
+	"THANO-9",
+	"M1 Garand",
+}
+
+local melee = {
+	"Beanknight Greatsword",
+	"Fortknight Greatsword",
+	"Trench Bayonet",
+	"Tomahawk",
+	"Mighty Claymore",
+	"Machete",
+	"M9 Bayonet",
+	"Hatchet",
+	"Firebean Greatsword",
+	"Fireaxe",
+	"Cavalry Saber",
+	"Baseball Bat",
+	"Flashlight",
+	"Hiking Pole",
+}
+-- most of these r wrong cuz C4 is not food
+--its becasuse the script i used for gettings these tables is fucking terrible
+local food = {
+	"Canned Water",
+	"Wood Planks",
+	"Fortknight Armor",
+	"Fortknight Helmet",
+	"Beanknight Pants",
+	"Beanknight Armor",
+	"Beanknight Helmet",
+	"C4 (Medium)",
+	"C4 (Small)",
+	"C4 (Large)",
+	"Detonator",
+	"Wine",
+	"Whiskey",
+	"Top Hat",
+	"Sweater",
+	"Stone Wall",
+	"Steel Wall",
+	"Soda",
+	"Bike Helmet",
+	"Shotgun Shells",
+	"SWAT Vest",
+	"SWAT Shirt",
+	"SWAT Pants",
+	"SWAT Helmet",
+	"Rocket",
+	"Rifle Ammo Crate",
+	"Rifle Ammo",
+	"Protein Powder",
+	"Pistol Ammo",
+	"Military Vest",
+	"Military Shirt",
+	"Military Pants",
+	"Military Helmet",
+	"MRE",
+	"MK.II Grenade",
+	"Bloxxy-Cola",
+	"Canned Tuna",
+	"Canned Meat",
+	"KERO Suit",
+	"KERO Pants",
+	"KERO Helmet",
+	"Jeans",
+	"Jar of Pickles",
+	"Jar of Peaches",
+	"Honey",
+	"Candy",
+	"Ghillie Vest",
+	"Ghillie Suit",
+	"Ghillie Pants",
+	"Ghillie Hood",
+	"Gas Mask",
+	"Canned Beans",
+	"Fedora",
+	"Emergency Rations",
+	"Edible Gold",
+	"Dr. Pepper",
+	"Civilian Vest",
+	"Chocolate",
+	"Cap",
+	"Fortknight Pants",
+	"Balaclava",
+	"Beanie",
+	"Beef Jerky",
+	"Beer",
+	"Military Backpack",
+	"Backpack",
+	"SWAT Backpack",
+	"Tuxedo Pants",
+	"Tuxedo Top",
+	"Hiking Shirt",
+	"Hiking Pants",
+	"KGrenade",
+}
+
+local function getItemType(name)
+	for _, v in ipairs(guns) do
+		if v == name then
+			return "gun"
+		end
+	end
+
+	for _, v in ipairs(melee) do
+		if v == name then
+			return "melee"
+		end
+	end
+
+	for _, v in ipairs(food) do
+		if v == name then
+			return "food"
+		end
+	end
+
+	return "unknown"
+end
+
+--//stummy gui\\--
+
+local StummyGui = Instance.new("ScreenGui")
+local S = Instance.new("TextButton")
+local SWITCH = Instance.new("TextButton")
+local BACK = Instance.new("TextButton")
+local RELOAD = Instance.new("TextButton")
+local ItemSpawn = Instance.new("ScrollingFrame")
+local Item1 = Instance.new("TextButton")
+local AB2 = Instance.new("TextButton")
+local AB1 = Instance.new("TextButton")
+local AB3 = Instance.new("TextButton")
+local AB4 = Instance.new("TextButton")
+local Inventory = Instance.new("Frame")
+local PLR = Instance.new("ImageLabel")
+local W3 = Instance.new("TextButton")
+local W2 = Instance.new("TextButton")
+local W1 = Instance.new("TextButton")
+local PLabel = Instance.new("TextLabel")
+local SLabel = Instance.new("TextLabel")
+local PSLabel = Instance.new("TextLabel")
+local HAT = Instance.new("TextButton")
+local HLabel = Instance.new("TextLabel")
+local TLabel = Instance.new("TextLabel")
+local TORS = Instance.new("TextButton")
+local LEGLabel = Instance.new("TextLabel")
+local PANT = Instance.new("TextButton")
+local VEST = Instance.new("TextButton")
+local VLabel = Instance.new("TextLabel")
+local KNIFE = Instance.new("TextButton")
+local KLabel = Instance.new("TextLabel")
+local Divider = Instance.new("ImageLabel")
+local SLOT1 = Instance.new("TextButton")
+local BAG = Instance.new("TextButton")
+local BLabel = Instance.new("TextLabel")
+local AB3_2 = Instance.new("TextButton")
+local AB2_2 = Instance.new("TextButton")
+local AB1_2 = Instance.new("TextButton")
+local AB4_2 = Instance.new("TextButton")
+local SLOT2 = Instance.new("TextButton")
+local SLOT3 = Instance.new("TextButton")
+local SLOT4 = Instance.new("TextButton")
+local SLOT5 = Instance.new("TextButton")
+local SLOT6 = Instance.new("TextButton")
+local SLOT7 = Instance.new("TextButton")
+local SLOT8 = Instance.new("TextButton")
+local SLOT9 = Instance.new("TextButton")
+local SLOT10 = Instance.new("TextButton")
+local SLOT11 = Instance.new("TextButton")
+local SLOT12 = Instance.new("TextButton")
+local SLOT13 = Instance.new("TextButton")
+local SLOT14 = Instance.new("TextButton")
+local SLOT15 = Instance.new("TextButton")
+local SLOT16 = Instance.new("TextButton")
+local SLOT17 = Instance.new("TextButton")
+local SLOT18 = Instance.new("TextButton")
+local SLOT19 = Instance.new("TextButton")
+local SLOT20 = Instance.new("TextButton")
+local SLOT21 = Instance.new("TextButton")
+local SLOT22 = Instance.new("TextButton")
+local SLOT23 = Instance.new("TextButton")
+local SLOT24 = Instance.new("TextButton")
+local SLOT25 = Instance.new("TextButton")
+local SLOT26 = Instance.new("TextButton")
+local SLOT27 = Instance.new("TextButton")
+local SLOT28 = Instance.new("TextButton")
+local SLOT29 = Instance.new("TextButton")
+local SLOT30 = Instance.new("TextButton")
+local SLOT31 = Instance.new("TextButton")
+local SLOT32 = Instance.new("TextButton")
+local SLOT33 = Instance.new("TextButton")
+local SLOT34 = Instance.new("TextButton")
+local SLOT35 = Instance.new("TextButton")
+local SLOT36 = Instance.new("TextButton")
+local SLOT37 = Instance.new("TextButton")
+local SLOT38 = Instance.new("TextButton")
+local SLOT39 = Instance.new("TextButton")
+local SLOT40 = Instance.new("TextButton")
+local SLOT41 = Instance.new("TextButton")
+local SLOT42 = Instance.new("TextButton")
+local SLOT43 = Instance.new("TextButton")
+local SLOT44 = Instance.new("TextButton")
+local SLOT45 = Instance.new("TextButton")
+local SLOT46 = Instance.new("TextButton")
+local SLOT47 = Instance.new("TextButton")
+local SLOT48 = Instance.new("TextButton")
+local SLOT49 = Instance.new("TextButton")
+
+StummyGui.Name = "StummyGui"
+StummyGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+StummyGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+S.Name = "S"
+S.Parent = StummyGui
+S.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+S.BorderColor3 = Color3.fromRGB(85, 85, 85)
+S.BorderSizePixel = 3
+S.Position = UDim2.new(0, 0, 1, -20)
+S.Size = UDim2.new(0, 157, 0, 20)
+S.Font = Enum.Font.GothamBold
+S.Text = "Nothing"
+S.TextColor3 = Color3.fromRGB(255, 255, 255)
+S.TextScaled = true
+S.TextSize = 14.000
+S.TextWrapped = true
+
+SWITCH.Name = "SWITCH"
+SWITCH.Parent = StummyGui
+SWITCH.BackgroundColor3 = Color3.fromRGB(54, 54, 54)
+SWITCH.Position = UDim2.new(1, -50, 1, -70)
+SWITCH.Size = UDim2.new(0, 50, 0, 50)
+SWITCH.Font = Enum.Font.GothamBold
+SWITCH.Text = "Switch Backpacks"
+SWITCH.TextColor3 = Color3.fromRGB(255, 255, 255)
+SWITCH.TextScaled = true
+SWITCH.TextSize = 14.000
+SWITCH.TextWrapped = true
+
+BACK.Name = "BACK"
+BACK.Parent = StummyGui
+BACK.BackgroundColor3 = Color3.fromRGB(54, 54, 54)
+BACK.Position = UDim2.new(1, -100, 1, -70)
+BACK.Size = UDim2.new(0, 50, 0, 50)
+BACK.Font = Enum.Font.GothamBold
+BACK.Text = "Open Backpack"
+BACK.TextColor3 = Color3.fromRGB(255, 255, 255)
+BACK.TextScaled = true
+BACK.TextSize = 14.000
+BACK.TextWrapped = true
+
+RELOAD.Name = "RELOAD"
+RELOAD.Parent = StummyGui
+RELOAD.BackgroundColor3 = Color3.fromRGB(54, 54, 54)
+RELOAD.Position = UDim2.new(1, -50, 1, -120)
+RELOAD.Size = UDim2.new(0, 50, 0, 50)
+RELOAD.Font = Enum.Font.GothamBold
+RELOAD.Text = "Reload"
+RELOAD.TextColor3 = Color3.fromRGB(255, 255, 255)
+RELOAD.TextScaled = true
+RELOAD.TextSize = 14.000
+RELOAD.TextWrapped = true
+
+ItemSpawn.Name = "ItemSpawn"
+ItemSpawn.Parent = StummyGui
+ItemSpawn.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+ItemSpawn.BorderColor3 = Color3.fromRGB(85, 85, 85)
+ItemSpawn.BorderSizePixel = 3
+ItemSpawn.Position = UDim2.new(0, 0, 0.5, -50)
+ItemSpawn.Size = UDim2.new(0, 100, 0, 100)
+ItemSpawn.CanvasSize = UDim2.new(0, 0, 0, 4980)
+
+AB2.Name = "AB2"
+AB2.Parent = StummyGui
+AB2.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+AB2.BorderColor3 = Color3.fromRGB(85, 85, 85)
+AB2.BorderSizePixel = 3
+AB2.Position = UDim2.new(0, 0, 0.5, -122)
+AB2.Size = UDim2.new(0, 100, 0, 19)
+AB2.Font = Enum.Font.GothamBold
+AB2.Text = "Add Rifle Rounds (100)"
+AB2.TextColor3 = Color3.fromRGB(255, 255, 255)
+AB2.TextScaled = true
+AB2.TextSize = 14.000
+AB2.TextWrapped = true
+
+AB1.Name = "AB1"
+AB1.Parent = StummyGui
+AB1.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+AB1.BorderColor3 = Color3.fromRGB(85, 85, 85)
+AB1.BorderSizePixel = 3
+AB1.Position = UDim2.new(0, 0, 0.5, -144)
+AB1.Size = UDim2.new(0, 100, 0, 19)
+AB1.Font = Enum.Font.GothamBold
+AB1.Text = "Add Pistol Rounds (100)"
+AB1.TextColor3 = Color3.fromRGB(255, 255, 255)
+AB1.TextScaled = true
+AB1.TextSize = 14.000
+AB1.TextWrapped = true
+
+AB3.Name = "AB3"
+AB3.Parent = StummyGui
+AB3.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+AB3.BorderColor3 = Color3.fromRGB(85, 85, 85)
+AB3.BorderSizePixel = 3
+AB3.Position = UDim2.new(0, 0, 0.5, -166)
+AB3.Size = UDim2.new(0, 100, 0, 19)
+AB3.Font = Enum.Font.GothamBold
+AB3.Text = "Add Shotgun Shells (100)"
+AB3.TextColor3 = Color3.fromRGB(255, 255, 255)
+AB3.TextScaled = true
+AB3.TextSize = 14.000
+AB3.TextWrapped = true
+
+AB4.Name = "AB4"
+AB4.Parent = StummyGui
+AB4.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+AB4.BorderColor3 = Color3.fromRGB(85, 85, 85)
+AB4.BorderSizePixel = 3
+AB4.Position = UDim2.new(0, 0, 0.5, -188)
+AB4.Size = UDim2.new(0, 100, 0, 19)
+AB4.Font = Enum.Font.GothamBold
+AB4.Text = "Add Rockets (1)"
+AB4.TextColor3 = Color3.fromRGB(255, 255, 255)
+AB4.TextScaled = true
+AB4.TextSize = 14.000
+AB4.TextWrapped = true
+
+Inventory.Name = "Inventory"
+Inventory.Parent = StummyGui
+Inventory.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+Inventory.BorderColor3 = Color3.fromRGB(85, 85, 85)
+Inventory.BorderSizePixel = 3
+Inventory.Position = UDim2.new(0.5, -350, 0.5, -175)
+Inventory.Size = UDim2.new(0, 700, 0, 350)
+Inventory.Visible = false
+
+PLR.Name = "PLR"
+PLR.Parent = Inventory
+PLR.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+PLR.BorderColor3 = Color3.fromRGB(27, 42, 53)
+PLR.BorderSizePixel = 3
+PLR.Position = UDim2.new(0, 20, 0, 20)
+PLR.Size = UDim2.new(0, 157, 0, 161)
+PLR.Image = "rbxthumb://type=AvatarBust&id=" .. game.Players.LocalPlayer.UserId .. "&w=420&h=420"
+
+W3.Name = "W3"
+W3.Parent = Inventory
+W3.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+W3.BorderColor3 = Color3.fromRGB(85, 85, 85)
+W3.BorderSizePixel = 3
+W3.Position = UDim2.new(0.0285714287, 0, 0.877142847, 0)
+W3.Size = UDim2.new(0, 157, 0, 23)
+W3.Font = Enum.Font.GothamBold
+W3.Text = ""
+W3.TextColor3 = Color3.fromRGB(255, 255, 255)
+W3.TextScaled = true
+W3.TextSize = 14.000
+W3.TextWrapped = true
+
+W2.Name = "W2"
+W2.Parent = Inventory
+W2.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+W2.BorderColor3 = Color3.fromRGB(85, 85, 85)
+W2.BorderSizePixel = 3
+W2.Position = UDim2.new(0.0285714287, 0, 0.734285772, 0)
+W2.Size = UDim2.new(0, 157, 0, 32)
+W2.Font = Enum.Font.GothamBold
+W2.Text = ""
+W2.TextColor3 = Color3.fromRGB(255, 255, 255)
+W2.TextScaled = true
+W2.TextSize = 14.000
+W2.TextWrapped = true
+
+W1.Name = "W1"
+W1.Parent = Inventory
+W1.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+W1.BorderColor3 = Color3.fromRGB(85, 85, 85)
+W1.BorderSizePixel = 3
+W1.Position = UDim2.new(0.0285714287, 0, 0.580000043, 0)
+W1.Size = UDim2.new(0, 157, 0, 32)
+W1.Font = Enum.Font.GothamBold
+W1.Text = ""
+W1.TextColor3 = Color3.fromRGB(255, 255, 255)
+W1.TextScaled = true
+W1.TextSize = 14.000
+W1.TextWrapped = true
+
+PLabel.Name = "PLabel"
+PLabel.Parent = Inventory
+PLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+PLabel.BackgroundTransparency = 1.000
+PLabel.BorderColor3 = Color3.fromRGB(27, 42, 53)
+PLabel.BorderSizePixel = 0
+PLabel.Position = UDim2.new(0.0285714287, 0, 0.517142832, 0)
+PLabel.Size = UDim2.new(0, 157, 0, 22)
+PLabel.Font = Enum.Font.GothamBold
+PLabel.Text = "Primary"
+PLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+PLabel.TextSize = 13.000
+PLabel.TextStrokeColor3 = Color3.fromRGB(255, 255, 255)
+
+SLabel.Name = "SLabel"
+SLabel.Parent = Inventory
+SLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+SLabel.BackgroundTransparency = 1.000
+SLabel.BorderColor3 = Color3.fromRGB(27, 42, 53)
+SLabel.BorderSizePixel = 0
+SLabel.Position = UDim2.new(0.0285714287, 0, 0.671428561, 0)
+SLabel.Size = UDim2.new(0, 157, 0, 22)
+SLabel.Font = Enum.Font.GothamBold
+SLabel.Text = "Secondary"
+SLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLabel.TextSize = 13.000
+SLabel.TextStrokeColor3 = Color3.fromRGB(255, 255, 255)
+
+PSLabel.Name = "PSLabel"
+PSLabel.Parent = Inventory
+PSLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+PSLabel.BackgroundTransparency = 1.000
+PSLabel.BorderColor3 = Color3.fromRGB(27, 42, 53)
+PSLabel.BorderSizePixel = 0
+PSLabel.Position = UDim2.new(0.0289999992, 0, 0.825999975, -2)
+PSLabel.Size = UDim2.new(0, 157, 0, 22)
+PSLabel.Font = Enum.Font.GothamBold
+PSLabel.Text = "Side"
+PSLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+PSLabel.TextSize = 10.000
+PSLabel.TextStrokeColor3 = Color3.fromRGB(255, 255, 255)
+
+HAT.Name = "HAT"
+HAT.Parent = Inventory
+HAT.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+HAT.BorderColor3 = Color3.fromRGB(85, 85, 85)
+HAT.BorderSizePixel = 3
+HAT.Position = UDim2.new(0.271428585, 0, 0.102565527, 0)
+HAT.Size = UDim2.new(0, 54, 0, 23)
+HAT.Font = Enum.Font.GothamBold
+HAT.Text = ""
+HAT.TextColor3 = Color3.fromRGB(255, 255, 255)
+HAT.TextScaled = true
+HAT.TextSize = 14.000
+HAT.TextWrapped = true
+
+HLabel.Name = "HLabel"
+HLabel.Parent = Inventory
+HLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+HLabel.BackgroundTransparency = 1.000
+HLabel.BorderColor3 = Color3.fromRGB(27, 42, 53)
+HLabel.BorderSizePixel = 0
+HLabel.Position = UDim2.new(0.271428585, 0, 0.0571428128, 0)
+HLabel.Size = UDim2.new(0, 54, 0, 16)
+HLabel.Font = Enum.Font.GothamBold
+HLabel.Text = "Hat"
+HLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+HLabel.TextSize = 13.000
+HLabel.TextStrokeColor3 = Color3.fromRGB(255, 255, 255)
+
+TLabel.Name = "TLabel"
+TLabel.Parent = Inventory
+TLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+TLabel.BackgroundTransparency = 1.000
+TLabel.BorderColor3 = Color3.fromRGB(27, 42, 53)
+TLabel.BorderSizePixel = 0
+TLabel.Position = UDim2.new(0.271428585, 0, 0.171780914, 0)
+TLabel.Size = UDim2.new(0, 54, 0, 16)
+TLabel.Font = Enum.Font.GothamBold
+TLabel.Text = "Torso"
+TLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TLabel.TextSize = 13.000
+TLabel.TextStrokeColor3 = Color3.fromRGB(255, 255, 255)
+
+TORS.Name = "TORS"
+TORS.Parent = Inventory
+TORS.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+TORS.BorderColor3 = Color3.fromRGB(85, 85, 85)
+TORS.BorderSizePixel = 3
+TORS.Position = UDim2.new(0.271428585, 0, 0.217203587, 0)
+TORS.Size = UDim2.new(0, 54, 0, 23)
+TORS.Font = Enum.Font.GothamBold
+TORS.Text = ""
+TORS.TextColor3 = Color3.fromRGB(255, 255, 255)
+TORS.TextScaled = true
+TORS.TextSize = 14.000
+TORS.TextWrapped = true
+
+LEGLabel.Name = "LEGLabel"
+LEGLabel.Parent = Inventory
+LEGLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+LEGLabel.BackgroundTransparency = 1.000
+LEGLabel.BorderColor3 = Color3.fromRGB(27, 42, 53)
+LEGLabel.BorderSizePixel = 0
+LEGLabel.Position = UDim2.new(0.271428585, 0, 0.29074499, 0)
+LEGLabel.Size = UDim2.new(0, 54, 0, 16)
+LEGLabel.Font = Enum.Font.GothamBold
+LEGLabel.Text = "Pants"
+LEGLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+LEGLabel.TextSize = 13.000
+LEGLabel.TextStrokeColor3 = Color3.fromRGB(255, 255, 255)
+
+PANT.Name = "PANT"
+PANT.Parent = Inventory
+PANT.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+PANT.BorderColor3 = Color3.fromRGB(85, 85, 85)
+PANT.BorderSizePixel = 3
+PANT.Position = UDim2.new(0.271428585, 0, 0.336167604, 0)
+PANT.Size = UDim2.new(0, 54, 0, 23)
+PANT.Font = Enum.Font.GothamBold
+PANT.Text = ""
+PANT.TextColor3 = Color3.fromRGB(255, 255, 255)
+PANT.TextScaled = true
+PANT.TextSize = 14.000
+PANT.TextWrapped = true
+
+VEST.Name = "VEST"
+VEST.Parent = Inventory
+VEST.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+VEST.BorderColor3 = Color3.fromRGB(85, 85, 85)
+VEST.BorderSizePixel = 3
+VEST.Position = UDim2.new(0.271428585, 0, 0.44859165, 0)
+VEST.Size = UDim2.new(0, 54, 0, 23)
+VEST.Font = Enum.Font.GothamBold
+VEST.Text = ""
+VEST.TextColor3 = Color3.fromRGB(255, 255, 255)
+VEST.TextScaled = true
+VEST.TextSize = 14.000
+VEST.TextWrapped = true
+
+VLabel.Name = "VLabel"
+VLabel.Parent = Inventory
+VLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+VLabel.BackgroundTransparency = 1.000
+VLabel.BorderColor3 = Color3.fromRGB(27, 42, 53)
+VLabel.BorderSizePixel = 0
+VLabel.Position = UDim2.new(0.271428585, 0, 0.403168947, 0)
+VLabel.Size = UDim2.new(0, 54, 0, 16)
+VLabel.Font = Enum.Font.GothamBold
+VLabel.Text = "Vest"
+VLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+VLabel.TextSize = 13.000
+VLabel.TextStrokeColor3 = Color3.fromRGB(255, 255, 255)
+
+KNIFE.Name = "KNIFE"
+KNIFE.Parent = Inventory
+KNIFE.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+KNIFE.BorderColor3 = Color3.fromRGB(85, 85, 85)
+KNIFE.BorderSizePixel = 3
+KNIFE.Position = UDim2.new(0.271428585, 0, 0.688571453, 0)
+KNIFE.Size = UDim2.new(0, 54, 0, 88)
+KNIFE.Font = Enum.Font.GothamBold
+KNIFE.Text = ""
+KNIFE.TextColor3 = Color3.fromRGB(255, 255, 255)
+KNIFE.TextScaled = true
+KNIFE.TextSize = 14.000
+KNIFE.TextWrapped = true
+
+KLabel.Name = "KLabel"
+KLabel.Parent = Inventory
+KLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+KLabel.BackgroundTransparency = 1.000
+KLabel.BorderColor3 = Color3.fromRGB(27, 42, 53)
+KLabel.BorderSizePixel = 0
+KLabel.Position = UDim2.new(0.271428585, 0, 0.640311837, 0)
+KLabel.Size = UDim2.new(0, 54, 0, 16)
+KLabel.Font = Enum.Font.GothamBold
+KLabel.Text = "Melee"
+KLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+KLabel.TextSize = 13.000
+KLabel.TextStrokeColor3 = Color3.fromRGB(255, 255, 255)
+
+Divider.Name = "Divider"
+Divider.Parent = Inventory
+Divider.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+Divider.BorderColor3 = Color3.fromRGB(255, 255, 255)
+Divider.BorderSizePixel = 0
+Divider.Position = UDim2.new(0, 255, 0, 20)
+Divider.Size = UDim2.new(0, 1, 0, 309)
+
+SLOT1.Name = "SLOT1"
+SLOT1.Parent = Inventory
+SLOT1.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT1.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT1.BorderSizePixel = 3
+SLOT1.Position = UDim2.new(0.387142867, 0, 0.0571429022, 0)
+SLOT1.Size = UDim2.new(0, 43, 0, 31)
+SLOT1.Font = Enum.Font.GothamBold
+SLOT1.Text = ""
+SLOT1.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT1.TextScaled = true
+SLOT1.TextSize = 14.000
+SLOT1.TextWrapped = true
+
+BAG.Name = "BAG"
+BAG.Parent = Inventory
+BAG.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+BAG.BorderColor3 = Color3.fromRGB(85, 85, 85)
+BAG.BorderSizePixel = 3
+BAG.Position = UDim2.new(0.271428585, 0, 0.560020208, 0)
+BAG.Size = UDim2.new(0, 54, 0, 23)
+BAG.Font = Enum.Font.GothamBold
+BAG.Text = ""
+BAG.TextColor3 = Color3.fromRGB(255, 255, 255)
+BAG.TextScaled = true
+BAG.TextSize = 14.000
+BAG.TextWrapped = true
+
+BLabel.Name = "BLabel"
+BLabel.Parent = Inventory
+BLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+BLabel.BackgroundTransparency = 1.000
+BLabel.BorderColor3 = Color3.fromRGB(27, 42, 53)
+BLabel.BorderSizePixel = 0
+BLabel.Position = UDim2.new(0.271428585, 0, 0.514597535, 0)
+BLabel.Size = UDim2.new(0, 54, 0, 16)
+BLabel.Font = Enum.Font.GothamBold
+BLabel.Text = "Bag"
+BLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+BLabel.TextSize = 13.000
+BLabel.TextStrokeColor3 = Color3.fromRGB(255, 255, 255)
+
+AB3_2.Name = "AB3"
+AB3_2.Parent = Inventory
+AB3_2.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+AB3_2.BorderColor3 = Color3.fromRGB(85, 85, 85)
+AB3_2.BorderSizePixel = 3
+AB3_2.Position = UDim2.new(0, 100, 0, 0)
+AB3_2.Size = UDim2.new(0, 50, 0, 15)
+AB3_2.Font = Enum.Font.GothamBold
+AB3_2.Text = "0"
+AB3_2.TextColor3 = Color3.fromRGB(255, 255, 255)
+AB3_2.TextScaled = true
+AB3_2.TextSize = 14.000
+AB3_2.TextStrokeColor3 = Color3.fromRGB(255, 255, 255)
+AB3_2.TextWrapped = true
+
+AB2_2.Name = "AB2"
+AB2_2.Parent = Inventory
+AB2_2.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+AB2_2.BorderColor3 = Color3.fromRGB(85, 85, 85)
+AB2_2.BorderSizePixel = 3
+AB2_2.Position = UDim2.new(0, 50, 0, 0)
+AB2_2.Size = UDim2.new(0, 50, 0, 15)
+AB2_2.Font = Enum.Font.GothamBold
+AB2_2.Text = "0"
+AB2_2.TextColor3 = Color3.fromRGB(255, 255, 255)
+AB2_2.TextScaled = true
+AB2_2.TextSize = 14.000
+AB2_2.TextStrokeColor3 = Color3.fromRGB(255, 255, 255)
+AB2_2.TextWrapped = true
+
+AB1_2.Name = "AB1"
+AB1_2.Parent = Inventory
+AB1_2.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+AB1_2.BorderColor3 = Color3.fromRGB(85, 85, 85)
+AB1_2.BorderSizePixel = 3
+AB1_2.Size = UDim2.new(0, 50, 0, 15)
+AB1_2.Font = Enum.Font.GothamBold
+AB1_2.Text = "0"
+AB1_2.TextColor3 = Color3.fromRGB(255, 255, 255)
+AB1_2.TextScaled = true
+AB1_2.TextSize = 14.000
+AB1_2.TextStrokeColor3 = Color3.fromRGB(255, 255, 255)
+AB1_2.TextWrapped = true
+
+AB4_2.Name = "AB4"
+AB4_2.Parent = Inventory
+AB4_2.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+AB4_2.BorderColor3 = Color3.fromRGB(85, 85, 85)
+AB4_2.BorderSizePixel = 3
+AB4_2.Position = UDim2.new(0, 150, 0, 0)
+AB4_2.Size = UDim2.new(0, 50, 0, 15)
+AB4_2.Font = Enum.Font.GothamBold
+AB4_2.Text = "0"
+AB4_2.TextColor3 = Color3.fromRGB(255, 255, 255)
+AB4_2.TextScaled = true
+AB4_2.TextSize = 14.000
+AB4_2.TextStrokeColor3 = Color3.fromRGB(255, 255, 255)
+AB4_2.TextWrapped = true
+
+SLOT2.Name = "SLOT2"
+SLOT2.Parent = Inventory
+SLOT2.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT2.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT2.BorderSizePixel = 3
+SLOT2.Position = UDim2.new(0.386999995, 61, 0.057, 0)
+SLOT2.Size = UDim2.new(0, 43, 0, 31)
+SLOT2.Font = Enum.Font.GothamBold
+SLOT2.Text = ""
+SLOT2.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT2.TextScaled = true
+SLOT2.TextSize = 14.000
+SLOT2.TextWrapped = true
+
+SLOT3.Name = "SLOT3"
+SLOT3.Parent = Inventory
+SLOT3.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT3.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT3.BorderSizePixel = 3
+SLOT3.Position = UDim2.new(0.386999995, 122, 0.057, 0)
+SLOT3.Size = UDim2.new(0, 43, 0, 31)
+SLOT3.Font = Enum.Font.GothamBold
+SLOT3.Text = ""
+SLOT3.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT3.TextScaled = true
+SLOT3.TextSize = 14.000
+SLOT3.TextWrapped = true
+
+SLOT4.Name = "SLOT4"
+SLOT4.Parent = Inventory
+SLOT4.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT4.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT4.BorderSizePixel = 3
+SLOT4.Position = UDim2.new(0.386999995, 183, 0.057, 0)
+SLOT4.Size = UDim2.new(0, 43, 0, 31)
+SLOT4.Font = Enum.Font.GothamBold
+SLOT4.Text = ""
+SLOT4.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT4.TextScaled = true
+SLOT4.TextSize = 14.000
+SLOT4.TextWrapped = true
+
+SLOT5.Name = "SLOT5"
+SLOT5.Parent = Inventory
+SLOT5.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT5.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT5.BorderSizePixel = 3
+SLOT5.Position = UDim2.new(0.386999995, 244, 0.057, 0)
+SLOT5.Size = UDim2.new(0, 43, 0, 31)
+SLOT5.Font = Enum.Font.GothamBold
+SLOT5.Text = ""
+SLOT5.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT5.TextScaled = true
+SLOT5.TextSize = 14.000
+SLOT5.TextWrapped = true
+
+SLOT6.Name = "SLOT6"
+SLOT6.Parent = Inventory
+SLOT6.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT6.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT6.BorderSizePixel = 3
+SLOT6.Position = UDim2.new(0.386999995, 305, 0.057, 0)
+SLOT6.Size = UDim2.new(0, 43, 0, 31)
+SLOT6.Font = Enum.Font.GothamBold
+SLOT6.Text = ""
+SLOT6.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT6.TextScaled = true
+SLOT6.TextSize = 14.000
+SLOT6.TextWrapped = true
+
+SLOT7.Name = "SLOT7"
+SLOT7.Parent = Inventory
+SLOT7.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT7.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT7.BorderSizePixel = 3
+SLOT7.Position = UDim2.new(0.386999995, 366, 0.057, 0)
+SLOT7.Size = UDim2.new(0, 43, 0, 31)
+SLOT7.Font = Enum.Font.GothamBold
+SLOT7.Text = ""
+SLOT7.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT7.TextScaled = true
+SLOT7.TextSize = 14.000
+SLOT7.TextWrapped = true
+
+SLOT8.Name = "SLOT8"
+SLOT8.Parent = Inventory
+SLOT8.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT8.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT8.BorderSizePixel = 3
+SLOT8.Position = UDim2.new(0.386999995, 0, 0.057, 45)
+SLOT8.Size = UDim2.new(0, 43, 0, 31)
+SLOT8.Font = Enum.Font.GothamBold
+SLOT8.Text = ""
+SLOT8.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT8.TextScaled = true
+SLOT8.TextSize = 14.000
+SLOT8.TextWrapped = true
+
+SLOT9.Name = "SLOT9"
+SLOT9.Parent = Inventory
+SLOT9.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT9.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT9.BorderSizePixel = 3
+SLOT9.Position = UDim2.new(0.386999995, 61, 0.057, 45)
+SLOT9.Size = UDim2.new(0, 43, 0, 31)
+SLOT9.Font = Enum.Font.GothamBold
+SLOT9.Text = ""
+SLOT9.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT9.TextScaled = true
+SLOT9.TextSize = 14.000
+SLOT9.TextWrapped = true
+
+SLOT10.Name = "SLOT10"
+SLOT10.Parent = Inventory
+SLOT10.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT10.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT10.BorderSizePixel = 3
+SLOT10.Position = UDim2.new(0.386999995, 122, 0.057, 45)
+SLOT10.Size = UDim2.new(0, 43, 0, 31)
+SLOT10.Font = Enum.Font.GothamBold
+SLOT10.Text = ""
+SLOT10.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT10.TextScaled = true
+SLOT10.TextSize = 14.000
+SLOT10.TextWrapped = true
+
+SLOT11.Name = "SLOT11"
+SLOT11.Parent = Inventory
+SLOT11.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT11.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT11.BorderSizePixel = 3
+SLOT11.Position = UDim2.new(0.386999995, 183, 0.057, 45)
+SLOT11.Size = UDim2.new(0, 43, 0, 31)
+SLOT11.Font = Enum.Font.GothamBold
+SLOT11.Text = ""
+SLOT11.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT11.TextScaled = true
+SLOT11.TextSize = 14.000
+SLOT11.TextWrapped = true
+
+SLOT12.Name = "SLOT12"
+SLOT12.Parent = Inventory
+SLOT12.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT12.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT12.BorderSizePixel = 3
+SLOT12.Position = UDim2.new(0.386999995, 244, 0.057, 45)
+SLOT12.Size = UDim2.new(0, 43, 0, 31)
+SLOT12.Font = Enum.Font.GothamBold
+SLOT12.Text = ""
+SLOT12.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT12.TextScaled = true
+SLOT12.TextSize = 14.000
+SLOT12.TextWrapped = true
+
+SLOT13.Name = "SLOT13"
+SLOT13.Parent = Inventory
+SLOT13.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT13.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT13.BorderSizePixel = 3
+SLOT13.Position = UDim2.new(0.386999995, 305, 0.057, 45)
+SLOT13.Size = UDim2.new(0, 43, 0, 31)
+SLOT13.Font = Enum.Font.GothamBold
+SLOT13.Text = ""
+SLOT13.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT13.TextScaled = true
+SLOT13.TextSize = 14.000
+SLOT13.TextWrapped = true
+
+SLOT14.Name = "SLOT14"
+SLOT14.Parent = Inventory
+SLOT14.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT14.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT14.BorderSizePixel = 3
+SLOT14.Position = UDim2.new(0.386999995, 366, 0.057, 45)
+SLOT14.Size = UDim2.new(0, 43, 0, 31)
+SLOT14.Font = Enum.Font.GothamBold
+SLOT14.Text = ""
+SLOT14.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT14.TextScaled = true
+SLOT14.TextSize = 14.000
+SLOT14.TextWrapped = true
+
+SLOT15.Name = "SLOT15"
+SLOT15.Parent = Inventory
+SLOT15.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT15.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT15.BorderSizePixel = 3
+SLOT15.Position = UDim2.new(0.386999995, 0, 0.057, 90)
+SLOT15.Size = UDim2.new(0, 43, 0, 31)
+SLOT15.Font = Enum.Font.GothamBold
+SLOT15.Text = ""
+SLOT15.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT15.TextScaled = true
+SLOT15.TextSize = 14.000
+SLOT15.TextWrapped = true
+
+SLOT16.Name = "SLOT16"
+SLOT16.Parent = Inventory
+SLOT16.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT16.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT16.BorderSizePixel = 3
+SLOT16.Position = UDim2.new(0.386999995, 61, 0.057, 90)
+SLOT16.Size = UDim2.new(0, 43, 0, 31)
+SLOT16.Font = Enum.Font.GothamBold
+SLOT16.Text = ""
+SLOT16.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT16.TextScaled = true
+SLOT16.TextSize = 14.000
+SLOT16.TextWrapped = true
+
+SLOT17.Name = "SLOT17"
+SLOT17.Parent = Inventory
+SLOT17.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT17.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT17.BorderSizePixel = 3
+SLOT17.Position = UDim2.new(0.386999995, 122, 0.057, 90)
+SLOT17.Size = UDim2.new(0, 43, 0, 31)
+SLOT17.Font = Enum.Font.GothamBold
+SLOT17.Text = ""
+SLOT17.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT17.TextScaled = true
+SLOT17.TextSize = 14.000
+SLOT17.TextWrapped = true
+
+SLOT18.Name = "SLOT18"
+SLOT18.Parent = Inventory
+SLOT18.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT18.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT18.BorderSizePixel = 3
+SLOT18.Position = UDim2.new(0.386999995, 183, 0.057, 90)
+SLOT18.Size = UDim2.new(0, 43, 0, 31)
+SLOT18.Font = Enum.Font.GothamBold
+SLOT18.Text = ""
+SLOT18.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT18.TextScaled = true
+SLOT18.TextSize = 14.000
+SLOT18.TextWrapped = true
+
+SLOT19.Name = "SLOT19"
+SLOT19.Parent = Inventory
+SLOT19.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT19.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT19.BorderSizePixel = 3
+SLOT19.Position = UDim2.new(0.386999995, 244, 0.057, 90)
+SLOT19.Size = UDim2.new(0, 43, 0, 31)
+SLOT19.Font = Enum.Font.GothamBold
+SLOT19.Text = ""
+SLOT19.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT19.TextScaled = true
+SLOT19.TextSize = 14.000
+SLOT19.TextWrapped = true
+
+SLOT20.Name = "SLOT20"
+SLOT20.Parent = Inventory
+SLOT20.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT20.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT20.BorderSizePixel = 3
+SLOT20.Position = UDim2.new(0.386999995, 305, 0.057, 90)
+SLOT20.Size = UDim2.new(0, 43, 0, 31)
+SLOT20.Font = Enum.Font.GothamBold
+SLOT20.Text = ""
+SLOT20.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT20.TextScaled = true
+SLOT20.TextSize = 14.000
+SLOT20.TextWrapped = true
+
+SLOT21.Name = "SLOT21"
+SLOT21.Parent = Inventory
+SLOT21.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT21.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT21.BorderSizePixel = 3
+SLOT21.Position = UDim2.new(0.386999995, 366, 0.057, 90)
+SLOT21.Size = UDim2.new(0, 43, 0, 31)
+SLOT21.Font = Enum.Font.GothamBold
+SLOT21.Text = ""
+SLOT21.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT21.TextScaled = true
+SLOT21.TextSize = 14.000
+SLOT21.TextWrapped = true
+
+SLOT22.Name = "SLOT22"
+SLOT22.Parent = Inventory
+SLOT22.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT22.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT22.BorderSizePixel = 3
+SLOT22.Position = UDim2.new(0.386999995, 0, 0.057, 135)
+SLOT22.Size = UDim2.new(0, 43, 0, 31)
+SLOT22.Font = Enum.Font.GothamBold
+SLOT22.Text = ""
+SLOT22.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT22.TextScaled = true
+SLOT22.TextSize = 14.000
+SLOT22.TextWrapped = true
+
+SLOT23.Name = "SLOT23"
+SLOT23.Parent = Inventory
+SLOT23.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT23.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT23.BorderSizePixel = 3
+SLOT23.Position = UDim2.new(0.386999995, 61, 0.057, 135)
+SLOT23.Size = UDim2.new(0, 43, 0, 31)
+SLOT23.Font = Enum.Font.GothamBold
+SLOT23.Text = ""
+SLOT23.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT23.TextScaled = true
+SLOT23.TextSize = 14.000
+SLOT23.TextWrapped = true
+
+SLOT24.Name = "SLOT24"
+SLOT24.Parent = Inventory
+SLOT24.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT24.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT24.BorderSizePixel = 3
+SLOT24.Position = UDim2.new(0.386999995, 122, 0.057, 135)
+SLOT24.Size = UDim2.new(0, 43, 0, 31)
+SLOT24.Font = Enum.Font.GothamBold
+SLOT24.Text = ""
+SLOT24.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT24.TextScaled = true
+SLOT24.TextSize = 14.000
+SLOT24.TextWrapped = true
+
+SLOT25.Name = "SLOT25"
+SLOT25.Parent = Inventory
+SLOT25.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT25.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT25.BorderSizePixel = 3
+SLOT25.Position = UDim2.new(0.386999995, 183, 0.057, 135)
+SLOT25.Size = UDim2.new(0, 43, 0, 31)
+SLOT25.Font = Enum.Font.GothamBold
+SLOT25.Text = ""
+SLOT25.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT25.TextScaled = true
+SLOT25.TextSize = 14.000
+SLOT25.TextWrapped = true
+
+SLOT26.Name = "SLOT26"
+SLOT26.Parent = Inventory
+SLOT26.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT26.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT26.BorderSizePixel = 3
+SLOT26.Position = UDim2.new(0.386999995, 244, 0.057, 135)
+SLOT26.Size = UDim2.new(0, 43, 0, 31)
+SLOT26.Font = Enum.Font.GothamBold
+SLOT26.Text = ""
+SLOT26.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT26.TextScaled = true
+SLOT26.TextSize = 14.000
+SLOT26.TextWrapped = true
+
+SLOT27.Name = "SLOT27"
+SLOT27.Parent = Inventory
+SLOT27.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT27.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT27.BorderSizePixel = 3
+SLOT27.Position = UDim2.new(0.386999995, 305, 0.057, 135)
+SLOT27.Size = UDim2.new(0, 43, 0, 31)
+SLOT27.Font = Enum.Font.GothamBold
+SLOT27.Text = ""
+SLOT27.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT27.TextScaled = true
+SLOT27.TextSize = 14.000
+SLOT27.TextWrapped = true
+
+SLOT28.Name = "SLOT28"
+SLOT28.Parent = Inventory
+SLOT28.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT28.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT28.BorderSizePixel = 3
+SLOT28.Position = UDim2.new(0.386999995, 366, 0.057, 135)
+SLOT28.Size = UDim2.new(0, 43, 0, 31)
+SLOT28.Font = Enum.Font.GothamBold
+SLOT28.Text = ""
+SLOT28.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT28.TextScaled = true
+SLOT28.TextSize = 14.000
+SLOT28.TextWrapped = true
+
+SLOT29.Name = "SLOT29"
+SLOT29.Parent = Inventory
+SLOT29.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT29.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT29.BorderSizePixel = 3
+SLOT29.Position = UDim2.new(0.386999995, 0, 0.057, 180)
+SLOT29.Size = UDim2.new(0, 43, 0, 31)
+SLOT29.Font = Enum.Font.GothamBold
+SLOT29.Text = ""
+SLOT29.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT29.TextScaled = true
+SLOT29.TextSize = 14.000
+SLOT29.TextWrapped = true
+
+SLOT30.Name = "SLOT30"
+SLOT30.Parent = Inventory
+SLOT30.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT30.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT30.BorderSizePixel = 3
+SLOT30.Position = UDim2.new(0.386999995, 61, 0.057, 180)
+SLOT30.Size = UDim2.new(0, 43, 0, 31)
+SLOT30.Font = Enum.Font.GothamBold
+SLOT30.Text = ""
+SLOT30.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT30.TextScaled = true
+SLOT30.TextSize = 14.000
+SLOT30.TextWrapped = true
+
+SLOT31.Name = "SLOT31"
+SLOT31.Parent = Inventory
+SLOT31.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT31.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT31.BorderSizePixel = 3
+SLOT31.Position = UDim2.new(0.386999995, 122, 0.057, 180)
+SLOT31.Size = UDim2.new(0, 43, 0, 31)
+SLOT31.Font = Enum.Font.GothamBold
+SLOT31.Text = ""
+SLOT31.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT31.TextScaled = true
+SLOT31.TextSize = 14.000
+SLOT31.TextWrapped = true
+
+SLOT32.Name = "SLOT32"
+SLOT32.Parent = Inventory
+SLOT32.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT32.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT32.BorderSizePixel = 3
+SLOT32.Position = UDim2.new(0.386999995, 183, 0.057, 180)
+SLOT32.Size = UDim2.new(0, 43, 0, 31)
+SLOT32.Font = Enum.Font.GothamBold
+SLOT32.Text = ""
+SLOT32.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT32.TextScaled = true
+SLOT32.TextSize = 14.000
+SLOT32.TextWrapped = true
+
+SLOT33.Name = "SLOT33"
+SLOT33.Parent = Inventory
+SLOT33.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT33.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT33.BorderSizePixel = 3
+SLOT33.Position = UDim2.new(0.386999995, 244, 0.057, 180)
+SLOT33.Size = UDim2.new(0, 43, 0, 31)
+SLOT33.Font = Enum.Font.GothamBold
+SLOT33.Text = ""
+SLOT33.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT33.TextScaled = true
+SLOT33.TextSize = 14.000
+SLOT33.TextWrapped = true
+
+SLOT34.Name = "SLOT34"
+SLOT34.Parent = Inventory
+SLOT34.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT34.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT34.BorderSizePixel = 3
+SLOT34.Position = UDim2.new(0.386999995, 305, 0.057, 180)
+SLOT34.Size = UDim2.new(0, 43, 0, 31)
+SLOT34.Font = Enum.Font.GothamBold
+SLOT34.Text = ""
+SLOT34.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT34.TextScaled = true
+SLOT34.TextSize = 14.000
+SLOT34.TextWrapped = true
+
+SLOT35.Name = "SLOT35"
+SLOT35.Parent = Inventory
+SLOT35.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT35.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT35.BorderSizePixel = 3
+SLOT35.Position = UDim2.new(0.386999995, 366, 0.057, 180)
+SLOT35.Size = UDim2.new(0, 43, 0, 31)
+SLOT35.Font = Enum.Font.GothamBold
+SLOT35.Text = ""
+SLOT35.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT35.TextScaled = true
+SLOT35.TextSize = 14.000
+SLOT35.TextWrapped = true
+
+SLOT36.Name = "SLOT36"
+SLOT36.Parent = Inventory
+SLOT36.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT36.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT36.BorderSizePixel = 3
+SLOT36.Position = UDim2.new(0.386999995, 0, 0.057, 225)
+SLOT36.Size = UDim2.new(0, 43, 0, 31)
+SLOT36.Font = Enum.Font.GothamBold
+SLOT36.Text = ""
+SLOT36.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT36.TextScaled = true
+SLOT36.TextSize = 14.000
+SLOT36.TextWrapped = true
+
+SLOT37.Name = "SLOT37"
+SLOT37.Parent = Inventory
+SLOT37.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT37.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT37.BorderSizePixel = 3
+SLOT37.Position = UDim2.new(0.386999995, 61, 0.057, 225)
+SLOT37.Size = UDim2.new(0, 43, 0, 31)
+SLOT37.Font = Enum.Font.GothamBold
+SLOT37.Text = ""
+SLOT37.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT37.TextScaled = true
+SLOT37.TextSize = 14.000
+SLOT37.TextWrapped = true
+
+SLOT38.Name = "SLOT38"
+SLOT38.Parent = Inventory
+SLOT38.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT38.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT38.BorderSizePixel = 3
+SLOT38.Position = UDim2.new(0.386999995, 122, 0.057, 225)
+SLOT38.Size = UDim2.new(0, 43, 0, 31)
+SLOT38.Font = Enum.Font.GothamBold
+SLOT38.Text = ""
+SLOT38.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT38.TextScaled = true
+SLOT38.TextSize = 14.000
+SLOT38.TextWrapped = true
+
+SLOT39.Name = "SLOT39"
+SLOT39.Parent = Inventory
+SLOT39.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT39.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT39.BorderSizePixel = 3
+SLOT39.Position = UDim2.new(0.386999995, 183, 0.057, 225)
+SLOT39.Size = UDim2.new(0, 43, 0, 31)
+SLOT39.Font = Enum.Font.GothamBold
+SLOT39.Text = ""
+SLOT39.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT39.TextScaled = true
+SLOT39.TextSize = 14.000
+SLOT39.TextWrapped = true
+
+SLOT40.Name = "SLOT40"
+SLOT40.Parent = Inventory
+SLOT40.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT40.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT40.BorderSizePixel = 3
+SLOT40.Position = UDim2.new(0.386999995, 244, 0.057, 225)
+SLOT40.Size = UDim2.new(0, 43, 0, 31)
+SLOT40.Font = Enum.Font.GothamBold
+SLOT40.Text = ""
+SLOT40.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT40.TextScaled = true
+SLOT40.TextSize = 14.000
+SLOT40.TextWrapped = true
+
+SLOT41.Name = "SLOT41"
+SLOT41.Parent = Inventory
+SLOT41.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT41.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT41.BorderSizePixel = 3
+SLOT41.Position = UDim2.new(0.386999995, 305, 0.057, 225)
+SLOT41.Size = UDim2.new(0, 43, 0, 31)
+SLOT41.Font = Enum.Font.GothamBold
+SLOT41.Text = ""
+SLOT41.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT41.TextScaled = true
+SLOT41.TextSize = 14.000
+SLOT41.TextWrapped = true
+
+SLOT42.Name = "SLOT42"
+SLOT42.Parent = Inventory
+SLOT42.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT42.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT42.BorderSizePixel = 3
+SLOT42.Position = UDim2.new(0.386999995, 366, 0.057, 225)
+SLOT42.Size = UDim2.new(0, 43, 0, 31)
+SLOT42.Font = Enum.Font.GothamBold
+SLOT42.Text = ""
+SLOT42.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT42.TextScaled = true
+SLOT42.TextSize = 14.000
+SLOT42.TextWrapped = true
+
+SLOT43.Name = "SLOT43"
+SLOT43.Parent = Inventory
+SLOT43.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT43.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT43.BorderSizePixel = 3
+SLOT43.Position = UDim2.new(0.386999995, 0, 0.057, 270)
+SLOT43.Size = UDim2.new(0, 43, 0, 31)
+SLOT43.Font = Enum.Font.GothamBold
+SLOT43.Text = ""
+SLOT43.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT43.TextScaled = true
+SLOT43.TextSize = 14.000
+SLOT43.TextWrapped = true
+
+SLOT44.Name = "SLOT44"
+SLOT44.Parent = Inventory
+SLOT44.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT44.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT44.BorderSizePixel = 3
+SLOT44.Position = UDim2.new(0.386999995, 61, 0.057, 270)
+SLOT44.Size = UDim2.new(0, 43, 0, 31)
+SLOT44.Font = Enum.Font.GothamBold
+SLOT44.Text = ""
+SLOT44.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT44.TextScaled = true
+SLOT44.TextSize = 14.000
+SLOT44.TextWrapped = true
+
+SLOT45.Name = "SLOT45"
+SLOT45.Parent = Inventory
+SLOT45.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT45.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT45.BorderSizePixel = 3
+SLOT45.Position = UDim2.new(0.386999995, 122, 0.057, 270)
+SLOT45.Size = UDim2.new(0, 43, 0, 31)
+SLOT45.Font = Enum.Font.GothamBold
+SLOT45.Text = ""
+SLOT45.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT45.TextScaled = true
+SLOT45.TextSize = 14.000
+SLOT45.TextWrapped = true
+
+SLOT46.Name = "SLOT46"
+SLOT46.Parent = Inventory
+SLOT46.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT46.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT46.BorderSizePixel = 3
+SLOT46.Position = UDim2.new(0.386999995, 183, 0.057, 270)
+SLOT46.Size = UDim2.new(0, 43, 0, 31)
+SLOT46.Font = Enum.Font.GothamBold
+SLOT46.Text = ""
+SLOT46.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT46.TextScaled = true
+SLOT46.TextSize = 14.000
+SLOT46.TextWrapped = true
+
+SLOT47.Name = "SLOT47"
+SLOT47.Parent = Inventory
+SLOT47.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT47.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT47.BorderSizePixel = 3
+SLOT47.Position = UDim2.new(0.386999995, 244, 0.057, 270)
+SLOT47.Size = UDim2.new(0, 43, 0, 31)
+SLOT47.Font = Enum.Font.GothamBold
+SLOT47.Text = ""
+SLOT47.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT47.TextScaled = true
+SLOT47.TextSize = 14.000
+SLOT47.TextWrapped = true
+
+SLOT48.Name = "SLOT48"
+SLOT48.Parent = Inventory
+SLOT48.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT48.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT48.BorderSizePixel = 3
+SLOT48.Position = UDim2.new(0.386999995, 305, 0.057, 270)
+SLOT48.Size = UDim2.new(0, 43, 0, 31)
+SLOT48.Font = Enum.Font.GothamBold
+SLOT48.Text = ""
+SLOT48.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT48.TextScaled = true
+SLOT48.TextSize = 14.000
+SLOT48.TextWrapped = true
+
+SLOT49.Name = "SLOT49"
+SLOT49.Parent = Inventory
+SLOT49.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+SLOT49.BorderColor3 = Color3.fromRGB(85, 85, 85)
+SLOT49.BorderSizePixel = 3
+SLOT49.Position = UDim2.new(0.386999995, 366, 0.057, 270)
+SLOT49.Size = UDim2.new(0, 43, 0, 31)
+SLOT49.Font = Enum.Font.GothamBold
+SLOT49.Text = ""
+SLOT49.TextColor3 = Color3.fromRGB(255, 255, 255)
+SLOT49.TextScaled = true
+SLOT49.TextSize = 14.000
+SLOT49.TextWrapped = true
+
+--//main gun system
+
+--// BACKPACK SYSTEM (toggle visual nas costas)
+local backpackEquipped = false
+local backpackBackModel = nil
+
+local function equipBackpackVisual()
+	if backpackEquipped then return end
+	
+	local char = player.Character
+	if not char then return end
+	
+	local torso = char:FindFirstChild("Torso")
+	if not torso then return end
+	
+	-- Procura o modelo "Backpack" na pasta Items (é food, mas tem modelo 3D)
+	local backpackTemplate = wepinfol:FindFirstChild("Backpack")
+	if not backpackTemplate then
+		warn("Backpack model not found in StummyModels/Items!")
+		return
+	end
+	
+	backpackBackModel = backpackTemplate:Clone()
+	backpackBackModel.Name = "Backpack_Visual"
+	
+	local parts = {}
+	for _, obj in ipairs(backpackBackModel:GetChildren()) do
+		if obj:IsA("BasePart") then
+			obj.Anchored = false
+			obj.CanCollide = false
+			table.insert(parts, obj)
+		end
+	end
+	
+	local handle = backpackBackModel:FindFirstChild("Handle")
+		or backpackBackModel:FindFirstChild("Body")
+		or backpackBackModel:FindFirstChildOfClass("BasePart")
+	
+	if handle then
+		handle.Name = "Handle"
+		for _, part in ipairs(parts) do
+			if part ~= handle then
+				local weld = Instance.new("WeldConstraint")
+				weld.Part0 = handle
+				weld.Part1 = part
+				weld.Parent = handle
+			end
+		end
+		
+		-- WELD NO CENTRO DAS COSTAS (mesma logica das armas, posicao central)
+		local backWeld = Instance.new("Weld")
+		backWeld.Name = "BackpackBackWeld"
+		backWeld.Part0 = torso
+		backWeld.Part1 = handle
+		backWeld.C0 = CFrame.new(0, 0.5, 0.85) * CFrame.Angles(math.rad(90), 0, 0)
+		backWeld.Parent = torso
+	end
+	
+	backpackBackModel.Parent = char
+	backpackEquipped = true
+end
+
+local function unequipBackpackVisual()
+	if not backpackEquipped then return end
+	
+	if backpackBackModel then
+		backpackBackModel:Destroy()
+		backpackBackModel = nil
+	end
+	
+	local char = player.Character
+	if char then
+		local torso = char:FindFirstChild("Torso")
+		if torso then
+			local weld = torso:FindFirstChild("BackpackBackWeld")
+			if weld then weld:Destroy() end
+		end
+	end
+	
+	backpackEquipped = false
+end
+
+local function toggleBackpackVisual()
+	if backpackEquipped then
+		unequipBackpackVisual()
+	else
+		equipBackpackVisual()
+	end
+end
+
+-- RPG-7 specific variables
+local rpgRocket = nil
+local rpgBolt = nil
+local rpgBoltVisible = true
+local rpgFired = false
+local rpgReloading = false
+
+local function Fire(mouse)
+if not character or not character:FindFirstChild("Head") then return end
+
+-- RPG-7 special handling
+if wepin and wepin.Name == "RPG-7" then
+if rpgFired then return end -- Only 1 shot before reload
+if rpgReloading then return end
+
+rpgFired = true
+rpgBoltVisible = false
+
+local origin = camera.CFrame.Position
+local target = mouse.Hit.Position
+local direction = (target - origin).Unit
+
+-- Find the bolt part in the tool
+local tool = character:FindFirstChild("RPG-7")
+if tool then
+rpgBolt = tool:FindFirstChild("bolt", true) or tool:FindFirstChild("Bolt", true)
+end
+
+-- Create rocket projectile
+local rocket = Instance.new("Part")
+rocket.Name = "Rocket"
+rocket.Size = Vector3.new(0.3, 0.3, 1.5)
+rocket.Color = Color3.new(0.2, 0.2, 0.2)
+rocket.Material = Enum.Material.Metal
+rocket.CFrame = CFrame.new(origin, origin + direction)
+rocket.Parent = Ignore_Model
+
+local rocketMesh = Instance.new("SpecialMesh", rocket)
+rocketMesh.MeshType = Enum.MeshType.Cylinder
+
+-- Detach and launch the bolt if it exists
+if rpgBolt then
+local boltClone = rpgBolt:Clone()
+boltClone.Anchored = false
+boltClone.CanCollide = true
+boltClone.Parent = Ignore_Model
+
+-- Weld all bolt children to the clone
+for _, child in ipairs(rpgBolt:GetChildren()) do
+if child:IsA("BasePart") then
+local w = Instance.new("Weld")
+w.Part0 = boltClone
+w.Part1 = child
+w.Parent = boltClone
+child.Anchored = false
+child.CanCollide = true
+end
+end
+
+-- Hide original bolt
+rpgBolt.Transparency = 1
+for _, child in ipairs(rpgBolt:GetChildren()) do
+if child:IsA("BasePart") then
+child.Transparency = 1
+end
+end
+
+-- Launch bolt toward target
+local bodyVelocity = Instance.new("BodyVelocity", boltClone)
+bodyVelocity.Velocity = direction * 200
+bodyVelocity.MaxForce = Vector3.new(50000, 50000, 50000)
+
+-- Tween bolt to target position
+local distance = (target - origin).Magnitude
+local travelTime = distance / 200
+
+TweenService:Create(boltClone, TweenInfo.new(travelTime, Enum.EasingStyle.Linear), {
+    Position = target
+}):Play()
+
+-- Explosion when bolt reaches target
+delay(travelTime, function()
+-- Explosion effect
+local explosion = Instance.new("Explosion")
+explosion.Position = boltClone.Position
+explosion.BlastRadius = 12
+explosion.BlastPressure = 500000
+explosion.Parent = workspace
+
+-- Unanchor parts in blast radius
+local blastRegion = Region3.new(boltClone.Position - Vector3.new(12, 12, 12), boltClone.Position + Vector3.new(12, 12, 12))
+local parts = workspace:FindPartsInRegion3(blastRegion, nil, 100)
+
+for _, part in ipairs(parts) do
+if part:IsA("BasePart") and not part:IsDescendantOf(character) then
+part.Anchored = false
+part.CanCollide = true
+
+-- Add slight velocity to unanchored parts
+local bodyVel = Instance.new("BodyVelocity", part)
+bodyVel.Velocity = (part.Position - boltClone.Position).Unit * 50 + Vector3.new(0, 30, 0)
+bodyVel.MaxForce = Vector3.new(50000, 50000, 50000)
+game.Debris:AddItem(bodyVel, 0.2)
+end
+end
+
+-- INSTANT KILL - Hitkill all humans in radius
+for _, model in ipairs(workspace:GetChildren()) do
+if model:IsA("Model") and model ~= character then
+local humanoid = model:FindFirstChild("Humanoid")
+local rootPart = model:FindFirstChild("HumanoidRootPart") or model:FindFirstChild("Torso")
+if humanoid and rootPart then
+local dist = (rootPart.Position - boltClone.Position).Magnitude
+if dist <= 12 then
+humanoid.Health = 0 -- INSTANT KILL
+end
+end
+end
+end
+
+-- Explosion visual
+local expPart = Instance.new("Part")
+expPart.Size = Vector3.new(1, 1, 1)
+expPart.Position = boltClone.Position
+expPart.Anchored = true
+expPart.CanCollide = false
+expPart.Transparency = 0.5
+expPart.Color = Color3.new(1, 0.5, 0)
+expPart.Material = Enum.Material.Neon
+expPart.Parent = Ignore_Model
+
+TweenService:Create(expPart, TweenInfo.new(0.3), {
+    Size = Vector3.new(8, 8, 8),
+    Transparency = 1
+}):Play()
+game.Debris:AddItem(expPart, 0.5)
+
+-- Clean up bolt
+boltClone:Destroy()
+end)
+end
+
+-- Also fire the rocket visual
+local bodyVelocity = Instance.new("BodyVelocity", rocket)
+bodyVelocity.Velocity = direction * 300
+bodyVelocity.MaxForce = Vector3.new(50000, 50000, 50000)
+
+game.Debris:AddItem(rocket, 3)
+
+return
+end
+
+-- Normal gun fire
+local origin = camera.CFrame.Position
+local target = mouse.Hit.Position
+
+local direction = (target - origin).Unit * 1000
+
+local rayParams = RaycastParams.new()
+rayParams.FilterDescendantsInstances = {character, Ignore_Model}
+rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+rayParams.IgnoreWater = true
+
+local result = workspace:Raycast(origin, direction, rayParams)
+
+if result then
+local hit = result.Instance
+local pos = result.Position
+
+local model = hit:FindFirstAncestorOfClass("Model")
+if model and model:FindFirstChild("Humanoid") then
+local humanoid = model:FindFirstChild("Humanoid")
+
+if hit.Name == "Head" then
+humanoid:TakeDamage(math.random(Settings.HeadShotDamage[1], Settings.HeadShotDamage[2]))
+else
+humanoid:TakeDamage(math.random(Settings.Damage[1], Settings.Damage[2]))
+end
+
+else
+local hole = Instance.new("Part")
+hole.Size = Vector3.new(0.2, 0.2, 0.01)
+hole.Anchored = true
+hole.CanCollide = false
+hole.Color = Color3.new(0,0,0)
+hole.Material = Enum.Material.SmoothPlastic
+
+hole.CFrame = CFrame.new(pos, pos + result.Normal)
+
+hole.Parent = Ignore_Model
+game.Debris:AddItem(hole, 5)
+end
+end
+end
+
+-- RPG-7 Reload function
+local function reloadRPG()
+if not wepin or wepin.Name ~= "RPG-7" then return end
+if not rpgFired then return end
+if rpgReloading then return end
+
+rpgReloading = true
+
+-- Reload animation delay
+wait(2)
+
+-- Restore bolt visibility
+if rpgBolt then
+rpgBolt.Transparency = 0
+for _, child in ipairs(rpgBolt:GetChildren()) do
+if child:IsA("BasePart") then
+child.Transparency = 0
+end
+end
+end
+
+rpgFired = false
+rpgBoltVisible = true
+rpgReloading = false
+end
+
+local function aimanim()
+if not reloading and not running and equipped then
+aiming = true
+game.Workspace.CurrentCamera.FieldOfView = 45
+end
+end
+
+local function unaimanim()
+aiming = false
+game.Workspace.CurrentCamera.FieldOfView = 70
+end
+
+mouse.Button2Down:Connect(aimanim)
+mouse.Button2Up:Connect(unaimanim)
+
+--//main character functions
+
+local function carms(tool)
+local char = player.Character
+if char and not Arms_Made then
+Arms_Made = true
+local Torso = char:FindFirstChild("Torso")
+if Torso and Torso:FindFirstChild("Right Shoulder") then
+Torso["Right Shoulder"].Part1 = nil
+end
+
+Left_Weld = Instance.new("Weld")
+Left_Weld.Name = "Left_Weld"
+Left_Weld.Part0 = char:WaitForChild("Head")
+Left_Weld.C0 = CFrame.new(0.4, -1.5, 0)
+Left_Weld.Parent = Torso
+
+local leftArm = char:FindFirstChild("Left Arm")
+if leftArm then
+if Torso and Torso:FindFirstChild("Left Shoulder") then
+Torso["Left Shoulder"].Part1 = nil
+end
+Left_Weld.Part1 = leftArm
+end
+
+Right_Weld = Instance.new("Weld")
+Right_Weld.Name = "Right_Weld"
+Right_Weld.Part0 = char:WaitForChild("Head")
+Right_Weld.Part1 = char:WaitForChild("Right Arm")
+Right_Weld.C0 = CFrame.new(0, -1.4, -0.2)
+Right_Weld.Parent = Torso
+
+Left_Weld.C1 = Settings.LeftPos
+Right_Weld.C1 = Settings.RightPos
+end
+
+if Settings.FakeArms and not Fake_Arm_Right then
+local rightArm = char:FindFirstChild("Right Arm")
+local leftArm = char:FindFirstChild("Left Arm")
+if rightArm and leftArm then
+Fake_Arm_Right = rightArm:Clone()
+Fake_Arm_Left = leftArm:Clone()
+Fake_Arm_Right.Size = Vector3.new()
+Fake_Arm_Left.Size = Vector3.new()
+
+local w1 = Instance.new("Weld", Fake_Arm_Right)
+w1.Part0 = rightArm
+w1.Part1 = Fake_Arm_Right
+Fake_Arm_Right.Transparency = Settings.FakeArmTransparency
+
+local w2 = Instance.new("Weld", Fake_Arm_Left)
+w2.Part0 = leftArm
+w2.Part1 = Fake_Arm_Left
+Fake_Arm_Left.Transparency = Settings.FakeArmTransparency
+
+Fake_Arm_Model = Instance.new("Model", camera)
+Fake_Arm_Model.Name = "FakeArms"
+Fake_Arm_Right.Parent = Fake_Arm_Model
+Fake_Arm_Left.Parent = Fake_Arm_Model
+
+local shirt = char:FindFirstChild("Shirt")
+if shirt then
+Instance.new("Humanoid", Fake_Arm_Model)
+shirt:Clone().Parent = Fake_Arm_Model
+end
+end
+end
+end
+
+local function rarms()
+local char = player.Character
+if Fake_Arm_Model then
+Fake_Arm_Model:Destroy()
+Fake_Arm_Right = nil
+Fake_Arm_Left = nil
+Fake_Arm_Model = nil
+end
+if char and Left_Weld and Right_Weld then
+Arms_Made = false
+local Torso = char:FindFirstChild("Torso")
+if Torso then
+local rs = Torso:FindFirstChild("Right Shoulder")
+local ls = Torso:FindFirstChild("Left Shoulder")
+if rs then rs.Part1 = char:FindFirstChild("Right Arm") end
+if ls then ls.Part1 = char:FindFirstChild("Left Arm") end
+end
+Left_Weld:Destroy()
+Right_Weld:Destroy()
+Left_Weld = nil
+Right_Weld = nil
+end
+end
+
+-- ============================================
+-- NECK UPDATE - EXATAMENTE IGUAL AO ORIGINAL
+-- MAS EM 3P OS BRAÇOS SIMULAM A ROTAÇÃO DO PESCOÇO
+-- ============================================
+local function updateneck()
+	if not IsEquipped then return end
+	local char = player.Character
+	local dist = (camera.Focus.Position - camera.CoordinateFrame.Position).magnitude
+	local Torso = char:FindFirstChild("Torso")
+	if Torso and Torso:FindFirstChild("Neck") then
+		if dist < 1 then
+			-- 1ª PESSOA: comportamento ORIGINAL
+			mouse.TargetFilter = workspace
+			Torso.Neck.C1 = CFrame.new()
+			Torso.Neck.C0 = CFrame.new(0, 1.5, 0) * CFrame.Angles(math.asin((mouse.Hit.Position - mouse.Origin.Position).unit.y), 0, 0)
+		else
+			-- 3ª PESSOA: cabeça PARADA (original)
+			mouse.TargetFilter = nil
+			Torso.Neck.C0 = CFrame.new(0, 1, 0, -1, 0, 0, 0, 0, 1, 0, 1, 0)
+			Torso.Neck.C1 = CFrame.new(0, -0.5, 0, -1, 0, 0, 0, 0, 1, 0, 1, 0)
+			
+			-- BRAÇOS: aplicam a MESMA rotação que o pescoço faria em 1P
+			-- Isso faz os braços olharem pra cima/baixo exatamente como em 1P
+			if Left_Weld and Right_Weld then
+				local pitch = math.asin((mouse.Hit.Position - mouse.Origin.Position).unit.y)
+				-- C0 do braço = posição base + offset do pescoço (simulado)
+				-- O C0 original é CFrame.new(0, -1.5, 0), então adicionamos a rotação de pitch
+				Left_Weld.C0 = CFrame.new(0, -1.5, 0) * CFrame.Angles(pitch, 0, 0)
+				Right_Weld.C0 = CFrame.new(0, -1.5, 0) * CFrame.Angles(pitch, 0, 0)
+			end
+		end
+	end
+end
+
+--// back modelssml
+
+local backModels = {}
+
+local function createBackModel(toolName, modelTemplate, side)
+side = side or 1
+
+if backModels[toolName] then
+backModels[toolName]:Destroy()
+backModels[toolName] = nil
+end
+
+local char = player.Character
+if not char then return end
+
+local torso = char:FindFirstChild("Torso")
+if not torso then return end
+
+local backModel = modelTemplate:Clone()
+backModel.Name = toolName .. "_Back"
+
+local parts = {}
+for _, obj in ipairs(backModel:GetChildren()) do
+if obj:IsA("BasePart") then
+obj.Anchored = false
+obj.CanCollide = false
+table.insert(parts, obj)
+end
+end
+
+local handle = backModel:FindFirstChild("Handle")
+or backModel:FindFirstChild("Body")
+or backModel:FindFirstChildOfClass("BasePart")
+
+if handle then
+handle.Name = "Handle"
+for _, part in ipairs(parts) do
+if part ~= handle then
+local weld = Instance.new("WeldConstraint")
+weld.Part0 = handle
+weld.Part1 = part
+weld.Parent = handle
+end
+end
+end
+
+-- Hide bolt on back model if RPG-7 was fired and not reloaded
+if toolName == "RPG-7" and not rpgBoltVisible then
+local backBolt = backModel:FindFirstChild("bolt", true) or backModel:FindFirstChild("Bolt", true)
+if backBolt then
+backBolt.Transparency = 1
+for _, child in ipairs(backBolt:GetChildren()) do
+if child:IsA("BasePart") then
+child.Transparency = 1
+end
+end
+end
+end
+
+if handle then
+local backWeld = Instance.new("Weld")
+backWeld.Name = "BackWeld_" .. toolName
+backWeld.Part0 = torso
+backWeld.Part1 = handle
+
+if side == 1 then
+backWeld.C0 = CFrame.new(0.5, 0.4, 1.1) * CFrame.Angles(math.rad(90), math.rad(360), 15.7)
+else
+backWeld.C0 = CFrame.new(-0.5, 0.4, 1.1) * CFrame.Angles(math.rad(90), math.rad(360), -15.7)
+end
+
+backWeld.Parent = torso
+end
+
+backModel.Parent = char
+backModels[toolName] = backModel
+end
+
+local function removeBackModel(toolName)
+if backModels[toolName] then
+backModels[toolName]:Destroy()
+backModels[toolName] = nil
+end
+end
+
+--// idk how to name this
+
+local function countGuns()
+local count = 0
+if wepin1 ~= nil then count = count + 1 end
+if wepin2 ~= nil then count = count + 1 end
+return count
+end
+
+local function destroyGunSlot(slot)
+if slot == 1 and wepin1 then
+local oldbackpack = player.Backpack:FindFirstChild(wepin1)
+local oldchar = character:FindFirstChild(wepin1)
+if oldbackpack then oldbackpack:Destroy() end
+if oldchar then oldchar:Destroy() end
+removeBackModel(wepin1)
+wepin1 = nil
+elseif slot == 2 and wepin2 then
+local oldbackpack = player.Backpack:FindFirstChild(wepin2)
+local oldchar = character:FindFirstChild(wepin2)
+if oldbackpack then oldbackpack:Destroy() end
+if oldchar then oldchar:Destroy() end
+removeBackModel(wepin2)
+wepin2 = nil
+end
+end
+
+local function updateGUI()
+W1.Text = wepin1 or ""
+W2.Text = wepin2 or ""
+
+if currentSlot == 1 then
+W1.BackgroundColor3 = Color3.fromRGB(85, 170, 85)
+W2.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+else
+W1.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+W2.BackgroundColor3 = Color3.fromRGB(85, 170, 85)
+end
+end
+
+local function switchGun()
+if currentSlot == 1 then
+currentSlot = 2
+else
+currentSlot = 1
+end
+updateGUI()
+
+local targetGun = currentSlot == 1 and wepin1 or wepin2
+if targetGun then
+local tool = player.Backpack:FindFirstChild(targetGun)
+if tool then
+tool.Parent = character
+end
+end
+end
+
+--//itemspawn itesm
+
+local y = 0
+
+local wepinfol = game.ReplicatedStorage:WaitForChild("StummyModels"):WaitForChild("Items")
+
+local function wepons()
+ItemSpawn:ClearAllChildren()
+y = 0
+local children = wepinfol:GetChildren()
+
+table.sort(children, function(a, b)
+return a.Name:lower() < b.Name:lower()
+end)
+
+for _, item in ipairs(children) do
+local b = Instance.new("TextButton")
+b.Name = item.Name
+b.Parent = ItemSpawn
+b.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+b.BorderColor3 = Color3.fromRGB(85, 85, 85)
+b.BorderSizePixel = 3
+b.Size = UDim2.new(0, 88, 0, 30)
+b.Position = UDim2.new(0, 0, 0, y)
+b.Font = Enum.Font.GothamBold
+b.Text = item.Name
+b.TextColor3 = Color3.fromRGB(255, 255, 255)
+b.TextScaled = true
+b.TextSize = 14
+b.TextWrapped = true
+y = y + 30
+
+if ItemSpawn:IsA("ScrollingFrame") then
+ItemSpawn.CanvasSize = UDim2.new(0, 0, 0, y)
+end
+
+b.MouseButton1Click:Connect(function()
+local model = wepinfol:FindFirstChild(item.Name)
+local itemType = getItemType(item.Name)
+
+if not model then return end
+
+if currentSlot == 1 and item.Name == wepin1 then
+destroyGunSlot(1)
+updateGUI()
+return
+end
+
+if currentSlot == 2 and item.Name == wepin2 then
+destroyGunSlot(2)
+updateGUI()
+return
+end
+
+if currentSlot == 1 and item.Name == wepin2 then
+currentSlot = 2
+updateGUI()
+local tool = player.Backpack:FindFirstChild(wepin2)
+if tool then tool.Parent = character end
+return
+end
+
+if currentSlot == 2 and item.Name == wepin1 then
+currentSlot = 1
+updateGUI()
+local tool = player.Backpack:FindFirstChild(wepin1)
+if tool then tool.Parent = character end
+return
+end
+
+local gunCount = countGuns()
+if gunCount >= 2 then
+destroyGunSlot(currentSlot)
+end
+
+local targetSlot
+if wepin1 == nil then
+targetSlot = 1
+elseif wepin2 == nil then
+targetSlot = 2
+else
+targetSlot = currentSlot
+end
+
+if targetSlot == 1 then
+wepin1 = item.Name
+else
+wepin2 = item.Name
+end
+
+if itemType == "gun" then
+createBackModel(item.Name, model, targetSlot)
+end
+
+if itemType == "gun" then
+local aimparter = model:FindFirstChild("AimPart")
+if aimparter then
+Settings.AimPart = aimparter
+else
+Settings.AimPart = model:FindFirstChild("Handle") or model:FindFirstChildOfClass("BasePart")
+end
+end
+
+local guntool = Instance.new("Tool")
+guntool.Name = item.Name
+guntool.CanBeDropped = false
+guntool.RequiresHandle = true
+
+local modelClone = model:Clone()
+local parts = {}
+
+for _, obj in ipairs(modelClone:GetChildren()) do
+if obj:IsA("BasePart") then
+obj.Anchored = false
+obj.CanCollide = false
+table.insert(parts, obj)
+end
+obj.Parent = guntool
+end
+
+local handle = guntool:FindFirstChild("Handle")
+or guntool:FindFirstChild("Body")
+or guntool:FindFirstChildOfClass("BasePart")
+
+if handle then
+handle.Name = "Handle"
+for _, part in ipairs(parts) do
+if part ~= handle then
+local weld = Instance.new("WeldConstraint")
+weld.Part0 = handle
+weld.Part1 = part
+weld.Parent = handle
+end
+end
+end
+
+guntool.Equipped:Connect(function()
+wepin = guntool
+IsEquipped = true
+if itemType == "gun" then
+removeBackModel(guntool.Name)
+end
+
+if itemType == "gun" then
+carms(guntool)
+RunService:BindToRenderStep("neckupdate", Enum.RenderPriority.Camera.Value + 1, updateneck)
+elseif itemType == "melee" then
+print("Equipped melee:", item.Name)
+elseif itemType == "food" then
+print("Equipped food:", item.Name)
+end
+end)
+
+guntool.Unequipped:Connect(function()
+wepin = nil
+IsEquipped = false
+
+-- Reset RPG-7 state when unequipped
+if guntool.Name == "RPG-7" then
+-- Don't reset rpgFired or rpgBoltVisible here - keep them as they are
+-- So if fired without reload, bolt stays hidden on back
+rpgReloading = false
+end
+
+if itemType == "gun" then
+local originalModel = wepinfol:FindFirstChild(guntool.Name)
+if originalModel then
+local slotNum = (wepin1 == guntool.Name) and 1 or 2
+createBackModel(guntool.Name, originalModel, slotNum)
+end
+end
+
+if itemType == "gun" then
+rarms()
+RunService:UnbindFromRenderStep("neckupdate")
+
+local char = player.Character
+if char then
+local Torso = char:FindFirstChild("Torso")
+if Torso and Torso:FindFirstChild("Neck") then
+Torso.Neck.C0 = CFrame.new(0, 1, 0, -1, 0, 0, 0, 0, 1, 0, 1, 0)
+Torso.Neck.C1 = CFrame.new(0, -0.5, 0, -1, 0, 0, 0, 0, 1, 0, 1, 0)
+end
+end
+end
+end)
+
+guntool.Parent = player.Backpack
+
+currentSlot = targetSlot
+updateGUI()
+end)
+end
+end
+
+wepons()
+
+--//main gun events
+
+local left = character:FindFirstChild("Left Arm")
+local right = character:FindFirstChild("Right Arm")
+
+RunService.RenderStepped:Connect(function()
+if not left or not right then return end
+
+local head = character:FindFirstChild("Head")
+if not head then return end
+
+local distance = (camera.CFrame.Position - head.Position).Magnitude
+local fp = distance < 1
+
+if fp then
+if IsEquipped then
+left.LocalTransparencyModifier = 0
+right.LocalTransparencyModifier = 0
+else
+left.LocalTransparencyModifier = 1
+right.LocalTransparencyModifier = 1
+end
+else
+left.LocalTransparencyModifier = 0
+right.LocalTransparencyModifier = 0
+end
+
+if mouse.Target then
+S.Text = mouse.Target.Name
+else
+S.Text = "Nothing"
+end
+end)
+
+mouse.Button1Down:Connect(function()
+if IsEquipped then
+camera.CFrame = camera.CFrame * CFrame.Angles(math.rad(Settings.Recoil), 0, 0)
+Fire(mouse)
+end
+end)
+
+-- RPG-7 Reload keybind (R key)
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+if gameProcessed then return end
+if input.KeyCode == Enum.KeyCode.R then
+reloadRPG()
+end
+end)
+
+-- Also connect GUI reload button for RPG-7
+RELOAD.MouseButton1Click:Connect(function()
+reloadRPG()
+end)
+
+--// Backpack thing
+
+local backpackOpen = false
+
+BACK.MouseButton1Click:Connect(function()
+backpackOpen = not backpackOpen
+Inventory.Visible = backpackOpen
+end)
+
+-- SWITCH BACKPACK BUTTON - Toggle backpack visual on back (usa o item "Backpack" do food)
+SWITCH.MouseButton1Click:Connect(function()
+	toggleBackpackVisual()
+end)
