@@ -1493,29 +1493,28 @@ SLOT49.TextScaled = true
 SLOT49.TextSize = 14.000
 SLOT49.TextWrapped = true
 
+
 --//main gun system
 
--- BACKPACK SYSTEM (novo)
+--// BACKPACK SYSTEM (usando mesma logica das armas nas costas)
 local backpackEquipped = false
 local backpackModel = nil
 
 local function equipBackpack()
 	if backpackEquipped then return end
 	
-	local backpackTemplate = wepinfol:FindFirstChild("Backpack")
-	or wepinfol:FindFirstChild("Military Backpack")
-	or wepinfol:FindFirstChild("SWAT Backpack")
-	
-	if not backpackTemplate then
-		warn("Backpack model not found in StummyModels/Items")
-		return
-	end
-	
 	local char = player.Character
 	if not char then return end
 	
 	local torso = char:FindFirstChild("Torso")
 	if not torso then return end
+	
+	-- Procura o modelo no StummyModels/Items (mesma pasta das armas)
+	local backpackTemplate = wepinfol:FindFirstChild("Backpack")
+	if not backpackTemplate then
+		warn("Backpack model not found in StummyModels/Items!")
+		return
+	end
 	
 	backpackModel = backpackTemplate:Clone()
 	backpackModel.Name = "EquippedBackpack"
@@ -1530,8 +1529,8 @@ local function equipBackpack()
 	end
 	
 	local handle = backpackModel:FindFirstChild("Handle")
-	or backpackModel:FindFirstChild("Body")
-	or backpackModel:FindFirstChildOfClass("BasePart")
+		or backpackModel:FindFirstChild("Body")
+		or backpackModel:FindFirstChildOfClass("BasePart")
 	
 	if handle then
 		handle.Name = "Handle"
@@ -1544,11 +1543,13 @@ local function equipBackpack()
 			end
 		end
 		
+		-- WELD NO CENTRO DAS COSTAS (diferente das armas que ficam nas laterais)
 		local backWeld = Instance.new("Weld")
 		backWeld.Name = "BackpackWeld"
 		backWeld.Part0 = torso
 		backWeld.Part1 = handle
-		backWeld.C0 = CFrame.new(0, 0.3, 0.8) * CFrame.Angles(math.rad(90), 0, 0)
+		-- Centro das costas, virado para cima
+		backWeld.C0 = CFrame.new(0, 0.5, 0.85) * CFrame.Angles(math.rad(90), 0, 0)
 		backWeld.Parent = torso
 	end
 	
@@ -1562,6 +1563,16 @@ local function unequipBackpack()
 	if backpackModel then
 		backpackModel:Destroy()
 		backpackModel = nil
+	end
+	
+	-- Remove o weld do torso
+	local char = player.Character
+	if char then
+		local torso = char:FindFirstChild("Torso")
+		if torso then
+			local weld = torso:FindFirstChild("BackpackWeld")
+			if weld then weld:Destroy() end
+		end
 	end
 	
 	backpackEquipped = false
